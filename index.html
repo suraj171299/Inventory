@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <ul id="users"></ul>
+        <form id="my-form" onsubmit="saveDetails(event)">
+            <div class="msg" id="er-msg"></div>
+            <label for="candy">Item Name</label>
+            <input type="text" name="candy" id="candyname" />
+            <label for="description">Description</label>
+            <input type="text" name="description" id="candydescription" />
+            <label for="price">Price</label>
+            <input type="number" name="price" id="candyprice" />
+            <label for="quantity">Quantity</label>
+            <input type="number" name="quantity" id="candyquantity" />
+            <button id="add">Add Item</button>
+        </form>
+    </body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script>
+        const myForm = document.getElementById("my-form");
+        const candyName = document.getElementById("candyname");
+        const candyDescription = document.getElementById("candydescription");
+        const candyPrice = document.getElementById("candyprice");
+        const candyQuantity = document.getElementById("candyquantity");
+        const addButton = document.getElementById("add");
+        function saveDetails(event) {
+            event.preventDefault();
+            const cname = candyName.value;
+            const cdescription = candyDescription.value;
+            const cquantity = candyQuantity.value;
+            const cprice = candyPrice.value;
+
+            const obj = {
+                cname,
+                cdescription,
+                cprice,
+                cquantity,
+            };
+            axios
+                .post(
+                    "https://crudcrud.com/api/e9d60328434f47e39a38244fcb4ba9b0/Inventory",
+                    obj
+                )
+                .then((response) => {
+                    showInventory(response.data);
+                    console.log(response);
+                })
+                .catch((err) => {
+                    document.body.innerHTML =
+                        document.body.innerHTML +
+                        "<h4>Something Went Wrong</h4>";
+                    console.log(err);
+                });
+        }
+        window.addEventListener("DOMContentLoaded", () => {
+            axios
+                .get(
+                    "https://crudcrud.com/api/e9d60328434f47e39a38244fcb4ba9b0/Inventory"
+                )
+                .then((response) => {
+                    response.data.forEach((item) => {
+                        showInventory(item);
+                    });
+                })
+                .catch((err) => console.log(err));
+        });
+        function showInventory(obj) {
+            const parentNode = document.getElementById("users");
+            const child = `<li id=${obj._id}>
+        			<span class="item-name">${obj.cname}</span>
+        			<span class="item-description">${obj.cdescription}</span>
+        			<span class="item-price">${obj.cprice}</span>
+        			<span class="item-quantity">${obj.cquantity}</span>
+        			<button onclick="buy('${obj._id}',1)">Buy 1</button>
+        			<button onclick="buy('${obj._id}',2)">Buy 2</button>
+        			<button onclick="buy('${obj._id}',3)">Buy 3</button>
+        		</li>`;
+            parentNode.innerHTML += child;
+        }
+        function buy(itemId, quantity) {
+            const parentNode = document.getElementById(itemId);
+            const quantityNode = parentNode.querySelector(".item-quantity");
+            const currentQuantity = Number(quantityNode.textContent);
+
+            if (currentQuantity >= quantity) {
+                const newQuantity = currentQuantity - quantity;
+                quantityNode.textContent = newQuantity;
+
+                axios
+                    .put(
+                        `https://crudcrud.com/api/e9d60328434f47e39a38244fcb4ba9b0/Inventory/${itemId}`,
+                        { cquantity: newQuantity }
+                    )
+                    .then((response) => console.log(response))
+                    .catch((err) => console.log(err));
+            }else{
+				alert("Insufficient Quantity")
+			}
+        }
+    </script>
+</html>
